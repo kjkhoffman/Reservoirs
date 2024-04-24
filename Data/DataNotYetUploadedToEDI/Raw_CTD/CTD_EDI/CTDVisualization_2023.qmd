@@ -10,10 +10,8 @@ This is the visualization script for reading in and checking CTD data from the c
 
 Load required packages
 ```{r load packages}
-install.packages("plotly")
 library(akima)
 library(colorRamps)
-library(plotly)
 library(tidyverse)
 library(lubridate)
 ```
@@ -24,16 +22,9 @@ first read in data from EDI. You will need to update the pasta.
 ctd_edi <- read.csv("https://pasta-s.lternet.edu/package/data/eml/edi/1113/5/0432a298a90b2b662f26c46071f66b8a")
 ```
 
-Next, subset the data!
-
-```{r subset to specified year}
-current_year <- ctd_edi %>% 
-  filter(DateTime >= "2023-01-01")
-```
-
 Abby's vis code below: 
 ```{r}
-qaqc <-  current_year %>%
+qaqc <-  ctd_edi %>%
   mutate(Date = as_datetime(DateTime))
 
 # Basic checks
@@ -55,30 +46,19 @@ plot_var <- function(var_name,
     scale_y_reverse() +
     geom_point() +
     facet_grid(cols = vars(Reservoir), rows = vars(SN))
-  ggplotly(qaqc_plotly)
-  #print(qaqc_plotly)
+  #ggplotly(qaqc_plotly)
+  print(qaqc_plotly)
 }
 
 vars_to_plot <- c("Temp_C", "DO_mgL", "DOsat_percent", "Cond_uScm", "SpCond_uScm",
                   "Chla_ugL", "Turbidity_NTU", "pH", "ORP_mV", "PAR_umolm2s", 
                   "DescRate_ms")
 
-library(colorRamps)
-library(plotly)
-
-qaqc_plotly <- data %>%
-    filter(Reservoir %in% reservoirs, Site == 50, year(Date) %in% year) %>%
-    sample_frac(.1) %>%
-    ggplot(aes(x = Date, y = Depth_m, color = !!var, shape = as.factor(!!flag))) +
-    scale_color_gradientn(colours = blue2green2red(100), na.value="gray") +
-    scale_y_reverse() +
-    geom_point() +
-    facet_grid(cols = vars(Reservoir), rows = vars(SN))
-
-ggplotly(qaqc_plotly)
+vars_to_plot %>%
+  map(plot_var, year = 2024)
 
 vars_to_plot %>%
-  map(plot_var, year = 2023, reservoirs = c("BVR"))
+  map(plot_var, year = 2023)
 
 vars_to_plot %>%
   map(plot_var, year = 2022)
